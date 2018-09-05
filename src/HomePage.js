@@ -199,10 +199,9 @@ export default class HomePage extends Component {
     incomeTotal: 0,
     incomeAmount: 0,
     balance: 0,
-    expenseList: [],
+    expenseList: [], //    expenditure: ["", 0, "", ""], //category, amount, note, date
     expenseType: "Food",
     expenseAmount: 0,
-    //    expenditure: ["", 0, "", ""], //category, amount, note, date
     income: ["", 0], //date, amount
     note: "",
     startDate: "",
@@ -296,7 +295,8 @@ export default class HomePage extends Component {
                           style={{
                             flexDirection: "row",
                             backgroundColor: "#262A2C",
-                            borderRadius: 60
+                            borderRadius: 60,
+                            width: 202
                           }}
                         >
                           <Icon
@@ -404,7 +404,7 @@ export default class HomePage extends Component {
                 }}
               >
                 <Text>
-                  You have spent {Math.trunc(spendingChart[0] * 100)} % of your
+                  You have spent {Math.trunc(spendingChart[0] * 100)}% of your
                   budget
                 </Text>
               </Panel>
