@@ -45,6 +45,7 @@ export default class HomePage extends Component {
   componentDidMount() {
     this._retreiveData();
   }
+
   async clearStorage() {
     console.log("clearing");
     AsyncStorage.multiRemove([
@@ -54,6 +55,7 @@ export default class HomePage extends Component {
       "expenseList"
     ]);
     this.setState({
+      newPeriod: true,
       spendingTotal: 0,
       expenseList: [],
       balance: 0,
@@ -96,6 +98,11 @@ export default class HomePage extends Component {
       console.log("did not save" + error);
     }
     try {
+      await AsyncStorage.setItem("spendingGoal", this.state.spendingGoal);
+    } catch (error) {
+      console.log("did not save" + error);
+    }
+    try {
       await AsyncStorage.setItem(
         "expenseList",
         JSON.stringify(this.state.expenseList)
@@ -107,6 +114,14 @@ export default class HomePage extends Component {
       await AsyncStorage.setItem(
         "categorySpending",
         JSON.stringify(this.state.spendingByCategory)
+      );
+    } catch (error) {
+      console.log("did not save" + error);
+    }
+    try {
+      await AsyncStorage.setItem(
+        "categorySpendingGoal",
+        JSON.stringify(this.state.spendingGoaByCategory)
       );
     } catch (error) {
       console.log("did not save" + error);
@@ -129,6 +144,11 @@ export default class HomePage extends Component {
       console.log("did not load" + error);
     }
     try {
+      const _spendingGoal = await AsyncStorage.getItem("spendingGoal");
+    } catch (error) {
+      console.log("did not load" + error);
+    }
+    try {
       var x = await AsyncStorage.getItem("expenseList");
       const _expenseList = JSON.parse(x);
     } catch (error) {
@@ -140,27 +160,49 @@ export default class HomePage extends Component {
     } catch (error) {
       console.log("did not load" + error);
     }
+    try {
+      var z = await AsyncStorage.getItem("categorySpendingGoal");
+      const _spendingGoalByCategory = JSON.parse(y);
+    } catch (error) {
+      console.log("did not load" + error);
+    }
     this.setState({
       spendingTotal: _spendingTotal,
+      spendingGoal: _spendingGoal,
       incomeTotal: _incomeTotal,
       balance: _balance,
       expenseList: [],
-      spendingByCategory: _spendingByCategory
+      spendingByCategory: _spendingByCategory,
+      spendingGoalByCategory: _spendingGoalByCategory
     });
   }
   state = {
     createExpenditure: false,
-    spendingGoal: 0,
-    spendingTotal: 0,
-    incomeTotal: 0,
     showModal: false,
     showHistory: false,
+    newPeriod: false,
+    spendingGoal: 0,
+    spendingGoalByCategory: {
+      Food: 0,
+      Housing: 0,
+      Gas: 0,
+      Recreation: 0,
+      "Work Expenses": 0,
+      Travel: 0,
+      Snacks: 0,
+      Medical: 0,
+      Clothing: 0,
+      "Household Supplies": 0,
+      Other: 0
+    },
+    spendingTotal: 0,
+    incomeTotal: 0,
     incomeAmount: 0,
     balance: 0,
     expenseList: [],
     expenseType: "Food",
     expenseAmount: 0,
-    expenditure: ["", 0, "", ""], //category, amount, note, date
+    //    expenditure: ["", 0, "", ""], //category, amount, note, date
     income: ["", 0], //date, amount
     note: "",
     startDate: "",
@@ -191,6 +233,14 @@ export default class HomePage extends Component {
       ls = [1];
     }
     const pieChartList = ls;
+    var spendingChart = [];
+    if (this.state.spendingGoal === 0) {
+      spendingChart = [0, 1];
+    } else {
+      var percentOne = this.state.spendingTotal / this.state.spendingGoal;
+      var percentTwo = 1 - percentOne;
+      spendingChart = [percentOne, percentTwo];
+    }
     return (
       <ScrollView>
         <View
@@ -284,24 +334,81 @@ export default class HomePage extends Component {
           </ScrollView>
           <ScrollView style={{ flex: 3 }}>
             <Text>Stats</Text>
-            <PieChart
-              chart_wh={200}
-              series={pieChartList}
-              doughnut={true}
-              sliceColor={[
-                "green",
-                "red",
-                "orange",
-                "#145dd1",
-                "#e1f2b5",
-                "#630404",
-                "#ad825d",
-                "#8e64b7",
-                "#ff2dea",
-                "#0acddb",
-                "#707070"
-              ]}
-            />
+            <Panel
+              header={() => {
+                return (
+                  <PieChart
+                    chart_wh={200}
+                    series={pieChartList}
+                    doughnut={true}
+                    sliceColor={[
+                      "green",
+                      "red",
+                      "orange",
+                      "#145dd1",
+                      "#e1f2b5",
+                      "#630404",
+                      "#ad825d",
+                      "#8e64b7",
+                      "#ff2dea",
+                      "#0acddb",
+                      "#707070"
+                    ]}
+                  />
+                );
+              }}
+            >
+              {expenseTypes.map((item, index) => {
+                if (this.state.spendingGoalByCategory[item] == 0) {
+                  var x = "$" + this.state.spendingByCategory[item];
+                } else {
+                  var y =
+                    this.state.spendingByCategory[item] /
+                    this.state.spendingGoalByCategory[item];
+
+                  var z = this.state.spendingByCategory[item];
+                  var x =
+                    "You've spent $" +
+                    z +
+                    "\n" +
+                    Math.trunc(y * 100) +
+                    "% of your goal";
+                }
+                return (
+                  <View style={{ flexDirection: "row" }}>
+                    <View
+                      style={{
+                        backgroundColor: iconNames[item][1],
+                        height: 20,
+                        width: 20
+                      }}
+                    />
+                    <Text>
+                      {item} {"\n"}
+                      {x}
+                    </Text>
+                  </View>
+                );
+              })}
+            </Panel>
+            <View>
+              <Panel
+                header={() => {
+                  return (
+                    <PieChart
+                      chart_wh={80}
+                      series={spendingChart}
+                      sliceColor={["red", "green"]}
+                    />
+                  );
+                }}
+              >
+                <Text>
+                  You have spent {Math.trunc(spendingChart[0] * 100)} % of your
+                  budget
+                </Text>
+              </Panel>
+            </View>
           </ScrollView>
         </View>
         <Modal
@@ -316,44 +423,28 @@ export default class HomePage extends Component {
             </TouchableOpacity>
             {this.state.expenseList.map((item, index) => {
               return (
-                <Panel
-                  header={() => {
-                    return (
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          width: 200,
-                          height: 50,
-                          backgroundColor: "#262A2C",
-                          borderRadius: 60,
-                          marginBottom: 5
-                        }}
-                      >
-                        <Icon
-                          name={iconNames[this.state.expenseList[index][0]][0]}
-                          size={40}
-                          color={iconNames[this.state.expenseList[index][0]][1]}
-                        />
-                        <Text
-                          style={{
-                            color: "white",
-                            padding: 5,
-                            paddingLeft: 10,
-                            paddingRight: 10
-                          }}
-                        >
-                          ${this.state.expenseList[index][1]}{" "}
-                        </Text>
-                      </View>
-                    );
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignSelf: "stretch",
+                    backgroundColor: "#262A2C",
+                    borderRadius: 60,
+                    marginBottom: 5
                   }}
                 >
-                  <Text>
-                    {this.state.expenseList[index][2]}
-                    {"\n"}
+                  <Icon
+                    name={iconNames[this.state.expenseList[index][0]][0]}
+                    size={40}
+                    color={iconNames[this.state.expenseList[index][0]][1]}
+                  />
+                  <Text style={styles.historyTextStyle}>
+                    ${this.state.expenseList[index][1]}{" "}
+                  </Text>
+                  <Text style={styles.historyTextStyle}>
+                    {this.state.expenseList[index][2]}{" "}
                     {this.state.expenseList[index][3]}
                   </Text>
-                </Panel>
+                </View>
               );
             })}
           </View>
@@ -438,17 +529,17 @@ export default class HomePage extends Component {
               );
               catSpending[this.state.expenseType] =
                 catSpending[this.state.expenseType] + this.state.expenseAmount;
+              let newList = this.state.expenseList.slice(0);
+              newList.unshift([
+                this.state.expenseType,
+                this.state.expenseAmount,
+                this.state.note,
+                Date()
+                  .toString()
+                  .substring(0, 11)
+              ]);
               this.setState({
-                expenseList: this.state.expenseList.concat([
-                  [
-                    this.state.expenseType,
-                    this.state.expenseAmount,
-                    this.state.note,
-                    Date()
-                      .toString()
-                      .substring(0, 11)
-                  ]
-                ]),
+                expenseList: newList,
                 balance: this.state.balance - this.state.expenseAmount,
                 spendingTotal:
                   this.state.spendingTotal + this.state.expenseAmount,
@@ -462,6 +553,91 @@ export default class HomePage extends Component {
           >
             <Text style={styles.buttonTextStyle}>Submit</Text>
           </TouchableOpacity>
+        </Modal>
+        <Modal
+          visible={this.state.newPeriod}
+          onRequestClose={() => console.log("nope")}
+        >
+          <View style={styles.modalViewStyle}>
+            <ScrollView>
+              <TouchableOpacity
+                onPress={() => this.setState({ newPeriod: false })}
+              >
+                <Icon name={"arrow-left-bold"} size={40} color={"black"} />
+              </TouchableOpacity>
+              <Text>Total Spending Goal</Text>
+              <TextInput
+                keyboardType={"numeric"}
+                value={this.state.spendingGoal}
+                onChangeText={value =>
+                  this.setState({
+                    spendingGoal: parseFloat(value),
+                    balance: parseFloat(value)
+                  })
+                }
+                style={{ width: 200, borderColor: "black", borderWidth: 2 }}
+              />
+              <View style={{ alignItems: "center" }}>
+                {expenseTypes.map((item, index) => {
+                  return (
+                    <Panel
+                      header={() => {
+                        return (
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              backgroundColor: "#262A2C",
+                              borderRadius: 60
+                            }}
+                          >
+                            <Icon
+                              name={iconNames[item][0]}
+                              size={40}
+                              color={iconNames[item][1]}
+                            />
+                            <Text
+                              style={{
+                                color: "white",
+                                padding: 5,
+                                paddingLeft: 10,
+                                paddingRight: 10
+                              }}
+                            >
+                              {item} {this.state.spendingGoalByCategory[item]}
+                            </Text>
+                          </View>
+                        );
+                      }}
+                    >
+                      <TextInput
+                        keyboardType={"numeric"}
+                        value={this.state.spendingGoalByCategory[item]}
+                        onChangeText={value => {
+                          var obj = JSON.parse(
+                            JSON.stringify(this.state.spendingGoalByCategory)
+                          );
+                          obj[item] = parseFloat(value);
+                          this.setState({ spendingGoalByCategory: obj });
+                        }}
+                        style={{
+                          width: 200,
+                          borderColor: "black",
+                          borderWidth: 2,
+                          marginBottom: 4
+                        }}
+                      />
+                    </Panel>
+                  );
+                })}
+              </View>
+              <TouchableOpacity
+                stlye={styles.buttonStyle}
+                onPress={() => this.setState({ newPeriod: false })}
+              >
+                <Text style={styles.buttonTextStyle}>Submit</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
         </Modal>
         <TouchableOpacity
           style={styles.buttonStyle}
@@ -507,5 +683,12 @@ const styles = {
     marginTop: 20,
     alignSelf: "stretch",
     alignItems: "center"
+  },
+  historyTextStyle: {
+    color: "white",
+    padding: 5,
+    paddingLeft: 10,
+    paddingRight: 10,
+    fontSize: 18
   }
 };
