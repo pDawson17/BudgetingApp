@@ -14,5 +14,5 @@ every time you have a chance and the app will keep track of all of your spending
 For this application I wanted to try and keep all the code as simple as possible. The entire application is run from
 one page, inside the source file.
 
-## Contact me
+## Contact Me
 Email me at philipjdawson@gmail.com with any issues or suggestions. Thanks!
