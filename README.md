@@ -1,7 +1,5 @@
 # BudgetingApp
 
-HEAD
-
 ## Project Overview
 
 Easy to use budgeting app that fits all of your necessary information for any given budgeting period onto one page.
@@ -16,19 +14,14 @@ The only data this application takese is how much you'd like to spend during any
 
 ## Usage
 
-HEAD
-
 Boot the app up, press "Start a New Budgeting Period" and input the amount of money you want to spend. Then
 decide which categories you'd like to specify amounts for individually. Next, simply input your expenditures
 every time you have a chance and the app will keep track of all of your spending and provide graphics and statistics.
 
 ## File Structure
 
-HEAD
-
 For this application I wanted to try and keep all the code as simple as possible. The entire application is run from one page, inside the source file.
 
 ## Contact Me
 
-HEAD
 Email me at philipjdawson@gmail.com with any issues or suggestions. Thanks!
